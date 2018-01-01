@@ -19,7 +19,8 @@
         "php": ">=5.4.0",
         "topthink/framework": "~5.0.0",
         "workerman/workerman": "^3.5",
-        "workerman/gateway-worker": "^3.0"
+        "workerman/gateway-worker": "^3.0",
+        "workerman/gatewayclient": "^3.0"
     },
     "autoload": {
         "psr-4": {

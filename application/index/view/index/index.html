@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>实时物联网平台</title>
+</head>
+
+<style type="text/css">
+    .iot-led {
+        vertical-align: middle;
+    }
+
+    .iot-led-label label,
+    .iot-led-current-status, .iot-led-connect, .iot-led-status-switch {
+        height: 50px;
+        line-height: 50px;
+        vertical-align: middle;
+        margin: 0px;
+    }
+
+    .iot-led-label {
+        text-align: center;
+    }
+</style>
+
+<body>
+
+<div class="iot-led">
+    <div class="row">
+        <div class="col-md-1">
+            <div class="iot-led-label">
+                <label>设备状态:</label>
+            </div>
+        </div>
+        <div class="col-md-11">
+            <div class="iot-led-current-status">
+                <p class="text-danger">设备未连接</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-1">
+            <div class="iot-led-label">
+                <label>连接设备:</label>
+            </div>
+        </div>
+        <div class="col-md-11">
+            <div class="iot-led-connect">
+                <button type="button" class="btn btn-success">连接设备</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-1">
+            <div class="iot-led-label">
+                <label>设备开关:</label>
+            </div>
+        </div>
+        <div class="col-md-11">
+            <div class="iot-led-status-switch">
+                <input type="checkbox" data-on-text="开" data-on-color="success" data-off-text="关" data-off-color="danger" disabled />
+            </div>
+        </div>
+    </div>
+</div>
+
+{js href="./../../../static/js/jquery-3.2.1.min.js, ./../../../static/js/bootstrap.min.js, ./../../../static/js/bootstrap-switch.min.js" /}
+{css href="./../../../static/css/bootstrap.min.css, ./../../../static/css/bootstrap-theme.min.css, ./../../../static/css/bootstrap-switch.min.css" /}
+
+<script>
+    $(document).ready(function () {
+        var connectUrl = "{:url('index/index/bindConnect')}";
+
+        var iotLedSwitch = $(".iot-led-status-switch input").bootstrapSwitch();
+        var iotLedStatus = $(".iot-led-current-status p");
+        var iotLedConnect = $(".iot-led-connect button");
+
+        // 连接设备的事件
+        iotLedConnect.click(function () {
+
+            if (iotLedConnect.hasClass('btn-success')) {
+
+                /**
+                 * 与GatewayWorker建立websocket连接，域名和端口改为你实际的域名端口，
+                 * 其中端口为Gateway端口，即start_gateway.php指定的端口。
+                 * start_gateway.php 中需要指定websocket协议，像这样
+                 * $gateway = new Gateway(websocket://0.0.0.0:7272);
+                 */
+                var ws = new WebSocket("ws://127.0.0.1:7272");
+
+                // 服务端主动推送消息时会触发这里的onmessage
+                ws.onmessage = function (e) {
+                    // json数据转换成js对象
+                    var data = JSON.parse(e.data);
+                    var type = data.type || '';
+                    var client_id = data.client_id;
+
+                    switch(type){
+                        case 'onConnect':
+                            // 修改连接状态的文字
+                            if (iotLedStatus.hasClass('text-danger')) {
+                                iotLedStatus.removeClass('text-danger').addClass('text-success');
+                                iotLedStatus.text('设备已连接 Client Id = ' + client_id);
+                            }
+
+                            // 修改连接按钮的文字
+                            if (iotLedConnect.hasClass('btn-success')) {
+                                iotLedConnect.removeClass('btn-success').addClass('btn-danger');
+                                iotLedConnect.text('断开设备');
+                            }
+
+                            // 启动LED操作界面
+                            iotLedSwitch.bootstrapSwitch('disabled', false);
+
+                            $.post(connectUrl, {client_id : client_id}, function (data) {
+                                console.log(data);
+                            }, 'json');
+
+                            break;
+
+//                    // Events.php中返回的init类型的消息，将client_id发给后台进行uid绑定
+//                    case 'init':
+//                        // 利用jquery发起ajax请求，将client_id发给后端进行uid绑定
+//                        $.post('./bind.php', {client_id: data.client_id}, function(data){}, 'json');
+//                        break;
+//
+//                    // 当mvc框架调用GatewayClient发消息时直接alert出来
+//                    default :
+//                        alert(e.data);
+                    }
+                }
+
+            } else {
+
+            }
+        });
+
+        // 切换开关的事件
+        iotLedSwitch.on("switchChange.bootstrapSwitch", function (event, data) {
+
+            console.log('LED状态' + data);
+
+//            if (!data) {
+//                iotLedSwitch.bootstrapSwitch('state', false);
+//            }
+//            iotLedSwitch.bootstrapSwitch('readonly', !data);
+        });
+    });
+</script>
+
+</body>
+</html>
