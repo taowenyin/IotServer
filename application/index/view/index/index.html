@@ -80,10 +80,13 @@
     $(document).ready(function () {
         var connectUrl = "{:url('index/index/bindConnect')}";
         var toggleUrl = "{:url('index/index/toggleIot')}";
+        var closeUrl = "{:url('index/index/closeConnect')}";
 
         var iotLedSwitch = $(".iot-led-status-switch input").bootstrapSwitch();
         var iotLedStatus = $(".iot-led-current-status p");
         var iotLedConnect = $(".iot-led-connect button");
+
+        var client_id = 0; // 保存WebSocket的ID
 
         // 连接设备的事件
         iotLedConnect.click(function () {
@@ -103,14 +106,13 @@
                     // json数据转换成js对象
                     var data = JSON.parse(e.data);
                     var type = data.type;
-                    var client_id = data.client_id;
+                    client_id = data.client_id;
 
                     switch(type){
                         case 'onConnect':
                             $.post(connectUrl, {client_id : client_id}, function (data) {
-                                console.log(data);
                                 if ('success' === data.res) {
-                                    var client_id = data.client_id;
+                                    client_id = data.client_id;
                                     var uid = data.uid;
 
                                     // 修改连接状态的文字
@@ -132,11 +134,33 @@
                             }, 'json');
 
                             break;
+
+                        case 'message':
+                            console.log(data.message);
+
+                            break;
                     }
                 }
 
             } else {
+                $.post(closeUrl, {client_id : client_id}, function (data) {
+                    if ('success' === data.res) {
+                        // 修改连接状态的文字
+                        if (iotLedStatus.hasClass('text-success')) {
+                            iotLedStatus.removeClass('text-success').addClass('text-danger');
+                            iotLedStatus.text('设备未连接');
+                        }
 
+                        // 修改连接按钮的文字
+                        if (iotLedConnect.hasClass('btn-danger')) {
+                            iotLedConnect.removeClass('btn-danger').addClass('btn-success');
+                            iotLedConnect.text('连接设备');
+                        }
+
+                        // 启动LED操作界面
+                        iotLedSwitch.bootstrapSwitch('disabled', true);
+                    }
+                }, 'json');
             }
         });
 

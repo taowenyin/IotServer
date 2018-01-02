@@ -15,7 +15,7 @@ $worker = new BusinessWorker();
 // worker名称
 $worker->name = 'IotBusinessWorker';
 // bussinessWorker进程数量
-$worker->count = 4;
+$worker->count = 12;
 // 服务注册地址
 $worker->registerAddress = '127.0.0.1:1236';
 // 设置业务处理类

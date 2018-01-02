@@ -57,8 +57,30 @@ class Index extends Controller
         if (!Request::instance()->isPost()) {
             $res['msg'] = '数据提交方式操作';
         } else {
+            $res['res'] = 'success';
+
             $client_id = Request::instance()->post('client_id');
             $iot_toggle = Request::instance()->post('iot_toggle');
+        }
+
+        return $res;
+    }
+
+    public function closeConnect()
+    {
+        $res = [
+            'res' => 'error'
+        ];
+
+        if (!Request::instance()->isPost()) {
+            $res['msg'] = '数据提交方式操作';
+        } else {
+            $res['res'] = 'success';
+
+            $client_id = Request::instance()->post('client_id');
+
+            Gateway::closeClient($client_id);
+
         }
 
         return $res;

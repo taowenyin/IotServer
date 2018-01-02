@@ -22,6 +22,8 @@ class Events
             'client_id' => $client_id
         )));
 
+        print "$client_id connect\n";
+
 //        // 向当前client_id发送数据
 //        Gateway::sendToClient($client_id, "Hello $client_id");
 //
@@ -37,7 +39,13 @@ class Events
     public static function onMessage($client_id, $message)
     {
         // 向所有人发送
-        Gateway::sendToAll("$client_id said $message");
+//        Gateway::sendToAll("$client_id said $message");
+
+        Gateway::sendToClient($client_id, json_encode(array(
+            'type' => 'message',
+            'client_id' => $client_id,
+            'message' => $message
+        )));
     }
 
     /**
@@ -47,6 +55,7 @@ class Events
     public static function onClose($client_id)
     {
         // 向所有人发送
-        GateWay::sendToAll("$client_id logout");
+//        GateWay::sendToAll("$client_id logout");
+        print "$client_id close\n";
     }
 }
