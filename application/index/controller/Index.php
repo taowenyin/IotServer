@@ -8,11 +8,12 @@ use think\Session;
 
 class Index extends Controller
 {
+    public static $webSocketGroup = 3;
+
     public function index()
     {
         if (!Session::has('uid')) {
             Session::set('uid', uuid());
-            Session::set('group', 1);
         }
 
         return $this->fetch();
@@ -29,7 +30,7 @@ class Index extends Controller
         } else {
             $client_id = Request::instance()->post('client_id');
             $uid = Request::instance()->session('uid');
-            $group_id = Request::instance()->session('group');
+            $group_id = self::$webSocketGroup;
 
             $res['res'] = 'success';
             $res['client_id'] = $client_id;
@@ -61,6 +62,9 @@ class Index extends Controller
 
             $client_id = Request::instance()->post('client_id');
             $iot_toggle = Request::instance()->post('iot_toggle');
+
+            Gateway::sendToGroup(2, "Hello IOT");
+//            Gateway::sendToAll("Hello IOT");
         }
 
         return $res;
