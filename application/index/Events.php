@@ -22,7 +22,7 @@ class Events
     public static function onConnect($client_id)
     {
         Gateway::sendToClient($client_id, json_encode(array(
-            'type' => 'onConnect',
+            'type' => 'connect',
             'client_id' => $client_id
         )));
 
@@ -85,6 +85,11 @@ class Events
         if ($_SERVER['GATEWAY_PORT'] == 7280) {
             print "$client_id Iot Socket Close\n";
         }
+
+//        Gateway::sendToClient($client_id, json_encode(array(
+//            'type' => 'close',
+//            'client_id' => $client_id
+//        )));
 
         // 向所有人发送
 //        GateWay::sendToAll("$client_id logout");

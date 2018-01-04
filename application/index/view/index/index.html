@@ -104,12 +104,17 @@
                 // 服务端主动推送消息时会触发这里的onmessage
                 ws.onmessage = function (e) {
                     // json数据转换成js对象
+
+                    if (e.data == '') {
+                        return;
+                    }
+
                     var data = JSON.parse(e.data);
                     var type = data.type;
                     client_id = data.client_id;
 
                     switch(type){
-                        case 'onConnect':
+                        case 'connect':
                             $.post(connectUrl, {client_id : client_id}, function (data) {
                                 if ('success' === data.res) {
                                     client_id = data.client_id;
@@ -137,6 +142,11 @@
 
                         case 'message':
                             console.log(data.message);
+
+                            break;
+
+                        case 'close':
+                            console.log(data.client_id + ' close');
 
                             break;
                     }
