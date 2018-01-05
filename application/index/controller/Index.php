@@ -63,7 +63,13 @@ class Index extends Controller
             $client_id = Request::instance()->post('client_id');
             $iot_toggle = Request::instance()->post('iot_toggle');
 
-            Gateway::sendToGroup(2, "Hello IOT");
+            if($iot_toggle == 1) {
+                Gateway::sendToGroup(2, "LED_ON");
+            } else {
+                Gateway::sendToGroup(2, "LED_OFF");
+            }
+
+
 //            Gateway::sendToAll("Hello IOT");
         }
 

@@ -99,7 +99,7 @@
                  * start_web_gateway.php 中需要指定websocket协议，像这样
                  * $gateway = new Gateway(websocket://0.0.0.0:7272);
                  */
-                var ws = new WebSocket("ws://127.0.0.1:7272");
+                var ws = new WebSocket("ws://39.104.87.214:7272");
 
                 // 服务端主动推送消息时会触发这里的onmessage
                 ws.onmessage = function (e) {
@@ -177,9 +177,9 @@
         // 切换开关的事件
         iotLedSwitch.on("switchChange.bootstrapSwitch", function (event, data) {
 
-            console.log('LED状态' + data);
+            console.log('LED状态' + (data ? 1 : 2));
 
-            $.post(toggleUrl, {client_id : client_id, iot_toggle : data}, function (data) {
+            $.post(toggleUrl, {client_id : client_id, iot_toggle : (data ? 1 : 2)}, function (data) {
                 console.log(data);
 
             }, 'json');
