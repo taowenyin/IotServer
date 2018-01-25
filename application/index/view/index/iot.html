@@ -10,11 +10,11 @@
 
 <style type="text/css">
     .real-time-iot-server {
-        padding: 20px;
+        padding: 10px;
     }
 
     .chart {
-        height: 400px;
+        height: 300px;
     }
 
     .iot-server-operate, .iot-server-operate div,
@@ -35,8 +35,9 @@
     <div class="row">
         <div class="col-md-5">
             <div id="light-chart" class="chart"></div>
+            <div id="mcu-chart" class="chart"></div>
         </div>
-        <div class="col-md-2">
+        <div class="col-md-2 text-center">
             <div class="iot-server-operate">
                 <div>
                     <button id="server_data_btn" type="button" class="btn btn-success">接收数据</button>
@@ -60,11 +61,11 @@
             </div>
         </div>
     </div>
-    <div class="row">
-        <div class="col-md-5">
-            <div id="mcu-chart" class="chart"></div>
-        </div>
-    </div>
+    <!--<div class="row">-->
+        <!--<div class="col-md-5">-->
+            <!--<div id="mcu-chart" class="chart"></div>-->
+        <!--</div>-->
+    <!--</div>-->
 </div>
 
 <link rel="stylesheet" type="text/css" href="./../../../../public/static/css/bootstrap.min.css">
@@ -171,6 +172,15 @@
                 if ('模拟' === checkedVal) {
                     // 开启定时器
                     timerId = setInterval(function () {
+
+                        if (lightAxisX.length >= 20) {
+                            lightAxisX.splice(0, 1);
+                            lightData.splice(0, 1);
+                        }
+                        if (mcuAxisX.length >= 20) {
+                            mcuAxisX.splice(0, 1);
+                            mcuData.splice(0, 1);
+                        }
 
                         lightAxisX.push(addLightDataTimes++);
                         lightData.push(getRandom(0, 100));
