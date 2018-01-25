@@ -19,6 +19,11 @@ class Index extends Controller
         return $this->fetch();
     }
 
+    public function iot()
+    {
+        return $this->fetch();
+    }
+
     public function bindConnect()
     {
         $res = [

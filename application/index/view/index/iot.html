@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>实时物联网平台</title>
+</head>
+
+<style type="text/css">
+    .real-time-iot-server {
+        padding: 20px;
+    }
+
+    .chart {
+        height: 400px;
+    }
+
+    .iot-server-operate, .iot-server-operate div,
+    .iot-data-type, .iot-data-type div,
+    .iot-server-status {
+        margin-bottom: 20px;
+    }
+
+    .iot-server-status span {
+        margin-left: 10px;
+        font-weight: bold;
+    }
+</style>
+
+<body>
+
+<div class="real-time-iot-server">
+    <div class="row">
+        <div class="col-md-5">
+            <div id="light-chart" class="chart"></div>
+        </div>
+        <div class="col-md-2">
+            <div class="iot-server-operate">
+                <div>
+                    <button id="server_data_btn" type="button" class="btn btn-success">接收数据</button>
+                </div>
+                <div>
+                    <button id="clear_data_btn" type="button" class="btn btn-danger">清空数据</button>
+                </div>
+            </div>
+            <div class="iot-data-type">
+                <div>
+                    <input id="emulator_data" type="radio" name="data_type" value="模拟" checked />
+                    <label for="emulator_data">模拟数据</label>
+                </div>
+                <div>
+                    <input id="iot_data" type="radio" name="data_type" value="IOT" />
+                    <label for="iot_data">IOT数据</label>
+                </div>
+            </div>
+            <div class="iot-server-status">
+                <label>设备状态:</label><span class="text-danger">服务器未连接</span>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-5">
+            <div id="mcu-chart" class="chart"></div>
+        </div>
+    </div>
+</div>
+
+<link rel="stylesheet" type="text/css" href="./../../../../public/static/css/bootstrap.min.css">
+<link rel="stylesheet" type="text/css" href="./../../../../public/static/css/bootstrap-theme.min.css">
+<link rel="stylesheet" type="text/css" href="./../../../../public/static/css/bootstrap-switch.min.css">
+
+<script src="./../../../../public/static/js/jquery-3.2.1.min.js"></script>
+<script src="./../../../../public/static/js/bootstrap.min.js"></script>
+<script src="./../../../../public/static/js/bootstrap-switch.min.js"></script>
+<script src="./../../../../public/static/js/echarts.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+        var timerId = 0; // 定时器ID
+        var addMcuDataTimes = 0;
+        var addLightDataTimes = 0;
+        var lightAxisX = new Array(), mcuAxisX = new Array();
+        var lightData = new Array(), mcuData = new Array();
+        var iotSocket = 0;
+        var serverStatus = $('.iot-server-status span');
+
+        var lightChart = echarts.init(document.getElementById('light-chart'), 'light');
+        var mcuChart = echarts.init(document.getElementById('mcu-chart'), 'light');
+
+        var lightOption = {
+            title: {
+                text: '实时光照值'
+            },
+            tooltip: {},
+            legend: {
+                orient: 'vertical',
+                left: 'center',
+                data: ['光照值']
+            },
+            xAxis: {
+                type: 'category',
+                data: lightAxisX
+            },
+            yAxis: {
+                type: 'value'
+            },
+            series: [{
+                name: '光照值',
+                data: lightData,
+                type: 'line',
+                smooth: true,
+                areaStyle: {
+                    opacity: 0.2
+                },
+                itemStyle: {
+                    color: '#80B2E2'
+                },
+                lineStyle: {
+                    width: 3
+                }
+            }]
+        };
+        var mcuOption = {
+            title: {
+                text: '实时MCU温度值'
+            },
+            tooltip: {},
+            legend: {
+                orient: 'vertical',
+                left: 'center',
+                data: ['MCU温度值']
+            },
+            xAxis: {
+                type: 'category',
+                data: mcuAxisX
+            },
+            yAxis: {
+                type: 'value'
+            },
+            series: [{
+                name: 'MCU温度值',
+                data: mcuData,
+                type: 'line',
+                smooth: true,
+                areaStyle: {
+                    opacity: 0.2
+                },
+                itemStyle: {
+                    color: '#FAB7A1'
+                },
+                lineStyle: {
+                    width: 3
+                }
+            }]
+        };
+        lightChart.setOption(lightOption);
+        mcuChart.setOption(mcuOption);
+
+        var serverDataBtn = $("#server_data_btn");
+        var clearDataBtn = $("#clear_data_btn");
+
+        serverDataBtn.click(function () {
+            if (serverDataBtn.hasClass('btn-success')) {
+                serverDataBtn.removeClass('btn-success').addClass('btn-danger');
+                serverDataBtn.text("暂停接收");
+                clearDataBtn.attr('disabled', 'disabled'); // 禁用清空按钮
+
+                var checkedVal = $("input[type='radio']:checked").val();
+                if ('模拟' === checkedVal) {
+                    // 开启定时器
+                    timerId = setInterval(function () {
+
+                        lightAxisX.push(addLightDataTimes++);
+                        lightData.push(getRandom(0, 100));
+                        mcuAxisX.push(addMcuDataTimes++);
+                        mcuData.push(getRandom(0, 100));
+
+                        lightChart.setOption({
+                            xAxis: {
+                                data: lightAxisX
+                            },
+                            series: [{
+                                name: '光照值',
+                                data: lightData
+                            }]
+                        });
+
+                        mcuChart.setOption({
+                            xAxis: {
+                                data: mcuAxisX
+                            },
+                            series: [{
+                                name: 'MCU温度值',
+                                data: mcuData
+                            }]
+                        });
+                    }, 1000);
+                } else {
+                    console.log("接收IOT信号");
+
+                    // 打开IOT Web Socket
+                    iotSocket = new WebSocket("ws://39.104.87.214:8010/ws");
+                    iotSocket.onopen = function (event) {
+                        serverStatus.removeClass('text-danger').addClass('text-success');
+                        serverStatus.text('服务器已连接');
+                    };
+
+                    iotSocket.onmessage = function (event) {
+                        var data = JSON.parse(event.data);
+                        var body = data.body;
+
+                        var type = body[0];
+                        var value = ((body[1] & 0xFF) << 8) + (body[2] & 0xFF);
+
+                        if (type === 1) {
+                            if (lightAxisX.length >= 20) {
+                                lightAxisX.splice(0, 1);
+                                lightData.splice(0, 1);
+                            }
+
+                            lightAxisX.push(addLightDataTimes++);
+                            lightData.push(value / 1000);
+
+                            lightChart.setOption({
+                                xAxis: {
+                                    data: lightAxisX
+                                },
+                                series: [{
+                                    name: '光照值',
+                                    data: lightData
+                                }]
+                            });
+                        }
+
+                        if (type === 2) {
+
+                            if (mcuAxisX.length >= 20) {
+                                mcuAxisX.splice(0, 1);
+                                mcuData.splice(0, 1);
+                            }
+
+                            mcuAxisX.push(addMcuDataTimes++);
+                            mcuData.push(value);
+
+                            mcuChart.setOption({
+                                xAxis: {
+                                    data: mcuAxisX
+                                },
+                                series: [{
+                                    name: 'MCU温度值',
+                                    data: mcuData
+                                }]
+                            });
+                        }
+                    }
+
+                    iotSocket.onclose = function (event) {
+                        serverStatus.removeClass('text-success').addClass('text-danger');
+                        serverStatus.text('服务器未连接');
+                    }
+                }
+
+            } else {
+                serverDataBtn.removeClass('btn-danger').addClass('btn-success');
+                serverDataBtn.text("继续接收");
+                clearDataBtn.removeAttr('disabled'); // 启用清空按钮
+
+                var checkedVal = $("input[type='radio']:checked").val();
+                if ('模拟' === checkedVal) {
+                    clearInterval(timerId);
+                } else {
+                    iotSocket.close();
+                }
+            }
+        });
+
+        clearDataBtn.click(function () {
+            lightAxisX.splice(0);
+            lightData.splice(0);
+            mcuAxisX.splice(0);
+            mcuData.splice(0);
+
+            lightChart.setOption({
+                xAxis: {
+                    data: lightAxisX
+                },
+                series: [{
+                    name: '光照值',
+                    data: lightData
+                }]
+            });
+
+            mcuChart.setOption({
+                xAxis: {
+                    data: mcuAxisX
+                },
+                series: [{
+                    name: 'MCU温度值',
+                    data: mcuData
+                }]
+            });
+        });
+    });
+
+    function getRandom(start, end) {
+        return parseInt(Math.random() * (end - start + 1) + start);
+    }
+</script>
+
+</body>
+</html>
